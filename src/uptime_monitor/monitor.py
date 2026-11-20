@@ -18,8 +18,12 @@ MAX_CONCURRENT_CHECKS = 10
 
 
 class Monitor:
-    def __init__(self, settings: Settings, storage: Storage,
-                 transport: httpx.AsyncBaseTransport | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        storage: Storage,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self.settings = settings
         self.storage = storage
         self._transport = transport  # tests inject httpx.MockTransport

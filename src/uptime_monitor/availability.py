@@ -56,8 +56,9 @@ def percentile(values: list[float], pct: float) -> float | None:
     return ordered[rank - 1]
 
 
-def window_stats(oks: list[bool], latencies_ms: list[float], window_seconds: float,
-                 interval_seconds: float) -> WindowStats:
+def window_stats(
+    oks: list[bool], latencies_ms: list[float], window_seconds: float, interval_seconds: float
+) -> WindowStats:
     total, successful = len(oks), sum(oks)
     return WindowStats(
         total=total,

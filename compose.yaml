@@ -1,0 +1,13 @@
+services:
+  monitor:
+    build: .
+    # Local-only: the dashboard has no authentication.
+    ports:
+      - "127.0.0.1:${PORT:-8000}:8000"
+    volumes:
+      - ./config.toml:/config/config.toml:ro   # your own list of sites
+      - monitor-data:/data
+    restart: unless-stopped
+
+volumes:
+  monitor-data:

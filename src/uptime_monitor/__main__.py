@@ -27,7 +27,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"uptime-monitor: invalid configuration: {exc}", file=sys.stderr)
         return 2
     logging.getLogger("uptime_monitor").info(
-        "monitoring %d target(s) every %ds", len(settings.targets), settings.interval_seconds)
+        "monitoring %d target(s) every %ds", len(settings.targets), settings.interval_seconds
+    )
     uvicorn.run(create_app(settings), host=args.host, port=args.port, log_level="warning")
     return 0
 

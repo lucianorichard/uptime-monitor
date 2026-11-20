@@ -1,0 +1,17 @@
+# Demo: docker compose -f compose.yaml -f compose.demo.yaml up --build
+# Monitors simulated sites instead of your config.toml.
+services:
+  monitor:
+    volumes: !override
+      - ./examples/config.demo.toml:/config/config.toml:ro
+      - monitor-data:/data
+    depends_on:
+      - demo-sites
+
+  demo-sites:
+    build: .
+    command: ["uvicorn", "demo_sites:app", "--app-dir", "/examples", "--host", "0.0.0.0", "--port", "9000"]
+    volumes:
+      - ./examples:/examples:ro
+    healthcheck:
+      disable: true   # the image healthcheck targets the monitor, not this demo app

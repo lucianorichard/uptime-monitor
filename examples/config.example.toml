@@ -1,0 +1,24 @@
+# Copy to config.toml and list YOUR OWN sites. This file is the only source of
+# monitored URLs: the dashboard cannot add targets or check arbitrary URLs.
+
+[monitor]
+interval_seconds = 60      # one check per target per interval (10 to 86400)
+timeout_seconds = 10       # default per-target timeout; must be shorter than the interval
+retention_days = 30        # older results are deleted
+database = "data/uptime.db"
+
+[[targets]]
+name = "website"                         # lowercase, digits, '-' or '_'; used in URLs
+url = "https://www.example.com/"
+
+[[targets]]
+name = "api-health"
+url = "https://api.example.com/health"
+expected_status = 200                    # only 200 counts as up (default "200-399")
+timeout_seconds = 5
+
+[[targets]]
+name = "blog"
+url = "https://example.com/blog"
+expected_status = ["200-299", 301]
+follow_redirects = false                 # default: redirects are recorded, not followed

@@ -46,8 +46,10 @@ class Storage:
         self._conn.close()
 
     def add(self, results: list[CheckResult]) -> None:
-        rows = [(r.target, _iso(r.checked_at), int(r.ok), r.status_code, r.response_ms, r.error)
-                for r in results]
+        rows = [
+            (r.target, _iso(r.checked_at), int(r.ok), r.status_code, r.response_ms, r.error)
+            for r in results
+        ]
         with self._lock, self._conn:
             self._conn.executemany(
                 "INSERT INTO checks (target, checked_at, ok, status_code, response_ms, error) "

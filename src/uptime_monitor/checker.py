@@ -56,19 +56,24 @@ async def check_target(client: httpx.AsyncClient, target: Target) -> CheckResult
             timeout=target.timeout_seconds,
         )
     except (TimeoutError, httpx.TimeoutException):
-        return CheckResult(target.name, checked_at, False, None, None,
-                           f"timeout after {target.timeout_seconds:g}s")
+        return CheckResult(
+            target.name, checked_at, False, None, None, f"timeout after {target.timeout_seconds:g}s"
+        )
     except httpx.ConnectError as exc:
-        return CheckResult(target.name, checked_at, False, None, None,
-                           f"connection failed: {_short(exc)}")
+        return CheckResult(
+            target.name, checked_at, False, None, None, f"connection failed: {_short(exc)}"
+        )
     except httpx.HTTPError as exc:
-        return CheckResult(target.name, checked_at, False, None, None,
-                           f"{type(exc).__name__}: {_short(exc)}")
+        return CheckResult(
+            target.name, checked_at, False, None, None, f"{type(exc).__name__}: {_short(exc)}"
+        )
 
     elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
     await response.aclose()
     ok = target.accepts(response.status_code)
-    error = None if ok else (
-        f"unexpected status {response.status_code} (expected {target.expected_label})"
+    error = (
+        None
+        if ok
+        else (f"unexpected status {response.status_code} (expected {target.expected_label})")
     )
     return CheckResult(target.name, checked_at, ok, response.status_code, elapsed_ms, error)

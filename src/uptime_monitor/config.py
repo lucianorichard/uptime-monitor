@@ -66,7 +66,9 @@ def _expected(value, where: str) -> tuple[tuple[int, int], ...]:
         text = str(item).strip()
         match = re.fullmatch(r"(\d{3})(?:-(\d{3}))?", text)
         if isinstance(item, bool) or not match:
-            raise ConfigError(f'{where}.expected_status: invalid entry "{item}" (use 200 or "200-299")')
+            raise ConfigError(
+                f'{where}.expected_status: invalid entry "{item}" (use 200 or "200-299")'
+            )
         lo, hi = int(match.group(1)), int(match.group(2) or match.group(1))
         if not 100 <= lo <= hi <= 599:
             raise ConfigError(f'{where}.expected_status: "{item}" is not a valid status range')
@@ -96,9 +98,13 @@ def parse_config(data: dict) -> Settings:
         raise ConfigError(f"unknown section(s): {', '.join(sorted(unknown))}")
     monitor = data.get("monitor", {})
     if set(monitor) - _MONITOR_KEYS:
-        raise ConfigError(f"monitor: unknown key(s) {', '.join(sorted(set(monitor) - _MONITOR_KEYS))}")
+        raise ConfigError(
+            f"monitor: unknown key(s) {', '.join(sorted(set(monitor) - _MONITOR_KEYS))}"
+        )
 
-    interval = int(_number(monitor.get("interval_seconds", 60), "monitor.interval_seconds", 10, 86400))
+    interval = int(
+        _number(monitor.get("interval_seconds", 60), "monitor.interval_seconds", 10, 86400)
+    )
     timeout = _number(monitor.get("timeout_seconds", 10), "monitor.timeout_seconds", 1, 60)
     retention = int(_number(monitor.get("retention_days", 30), "monitor.retention_days", 1, 365))
     database = monitor.get("database", "data/uptime.db")
@@ -117,26 +123,32 @@ def parse_config(data: dict) -> Settings:
         if not isinstance(raw, dict):
             raise ConfigError(f"{where} must be a table")
         if set(raw) - _TARGET_KEYS:
-            raise ConfigError(f"{where}: unknown key(s) {', '.join(sorted(set(raw) - _TARGET_KEYS))}")
+            raise ConfigError(
+                f"{where}: unknown key(s) {', '.join(sorted(set(raw) - _TARGET_KEYS))}"
+            )
         name = raw.get("name")
         if not isinstance(name, str) or not NAME_RE.match(name):
             raise ConfigError(f"{where}.name must be lowercase letters, digits, '-' or '_'")
         if name in seen:
             raise ConfigError(f'duplicate target name "{name}"')
         seen.add(name)
-        target_timeout = _number(raw.get("timeout_seconds", timeout), f"{where}.timeout_seconds", 1, 60)
+        target_timeout = _number(
+            raw.get("timeout_seconds", timeout), f"{where}.timeout_seconds", 1, 60
+        )
         if target_timeout >= interval:
             raise ConfigError(f"{where}.timeout_seconds must be shorter than the interval")
         follow = raw.get("follow_redirects", False)
         if not isinstance(follow, bool):
             raise ConfigError(f"{where}.follow_redirects must be true or false")
-        targets.append(Target(
-            name=name,
-            url=_url(raw.get("url"), where),
-            timeout_seconds=float(target_timeout),
-            expected_status=_expected(raw.get("expected_status", DEFAULT_EXPECTED), where),
-            follow_redirects=follow,
-        ))
+        targets.append(
+            Target(
+                name=name,
+                url=_url(raw.get("url"), where),
+                timeout_seconds=float(target_timeout),
+                expected_status=_expected(raw.get("expected_status", DEFAULT_EXPECTED), where),
+                follow_redirects=follow,
+            )
+        )
     if timeout >= interval:
         raise ConfigError("monitor.timeout_seconds must be shorter than the interval")
     return Settings(interval, float(timeout), retention, database, tuple(targets))

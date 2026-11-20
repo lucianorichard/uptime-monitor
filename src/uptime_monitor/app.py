@@ -59,8 +59,13 @@ def _chart(rows) -> dict:
             points.append(f"{x},{round(CHART_H - r['response_ms'] / top * CHART_H, 1)}")
         if not r["ok"]:
             failures.append(x)
-    return {"points": " ".join(points), "failures": failures, "max_ms": round(top),
-            "width": CHART_W, "height": CHART_H}
+    return {
+        "points": " ".join(points),
+        "failures": failures,
+        "max_ms": round(top),
+        "width": CHART_W,
+        "height": CHART_H,
+    }
 
 
 def summarize(settings: Settings, storage: Storage, target: Target, now: datetime) -> dict:
@@ -85,8 +90,13 @@ def summarize(settings: Settings, storage: Storage, target: Target, now: datetim
     }
 
 
-def create_app(settings: Settings, storage: Storage | None = None, *, run_monitor: bool = True,
-               transport: httpx.AsyncBaseTransport | None = None) -> FastAPI:
+def create_app(
+    settings: Settings,
+    storage: Storage | None = None,
+    *,
+    run_monitor: bool = True,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         store = storage or Storage(settings.database)
@@ -103,8 +113,13 @@ def create_app(settings: Settings, storage: Storage | None = None, *, run_monito
             if storage is None:
                 store.close()
 
-    app = FastAPI(title="Uptime Monitor", version=__version__, lifespan=lifespan,
-                  docs_url="/api/docs", redoc_url=None)
+    app = FastAPI(
+        title="Uptime Monitor",
+        version=__version__,
+        lifespan=lifespan,
+        docs_url="/api/docs",
+        redoc_url=None,
+    )
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
@@ -131,34 +146,51 @@ def create_app(settings: Settings, storage: Storage | None = None, *, run_monito
     @app.get("/", response_class=HTMLResponse)
     def dashboard(request: Request):
         items = summaries(request)
-        counts = {s: sum(1 for i in items if i["state"] == s) for s in ("up", "down", "stale", "no-data")}
-        return TEMPLATES.TemplateResponse(request, "index.html", {
-            "items": items, "counts": counts, "settings": settings,
-            "last_run": request.app.state.monitor.last_run, "version": __version__,
-        })
+        counts = {
+            s: sum(1 for i in items if i["state"] == s) for s in ("up", "down", "stale", "no-data")
+        }
+        return TEMPLATES.TemplateResponse(
+            request,
+            "index.html",
+            {
+                "items": items,
+                "counts": counts,
+                "settings": settings,
+                "last_run": request.app.state.monitor.last_run,
+                "version": __version__,
+            },
+        )
 
     @app.get("/targets/{name}", response_class=HTMLResponse)
     def target_page(request: Request, name: str):
         target = configured(name)
         now = datetime.now(UTC)
-        return TEMPLATES.TemplateResponse(request, "target.html", {
-            "item": summarize(settings, request.app.state.storage, target, now),
-            "checks": [dict(r) for r in request.app.state.storage.recent(name, 100)],
-            "settings": settings, "version": __version__,
-        })
+        return TEMPLATES.TemplateResponse(
+            request,
+            "target.html",
+            {
+                "item": summarize(settings, request.app.state.storage, target, now),
+                "checks": [dict(r) for r in request.app.state.storage.recent(name, 100)],
+                "settings": settings,
+                "version": __version__,
+            },
+        )
 
     @app.get("/api/status")
     def api_status(request: Request):
         return {
             "interval_seconds": settings.interval_seconds,
             "last_run": request.app.state.monitor.last_run,
-            "targets": [{
-                "name": s["target"].name,
-                "url": s["target"].url,
-                "state": s["state"],
-                "latest": s["latest"],
-                "windows": {k: asdict(v) for k, v in s["stats"].items()},
-            } for s in summaries(request)],
+            "targets": [
+                {
+                    "name": s["target"].name,
+                    "url": s["target"].url,
+                    "state": s["state"],
+                    "latest": s["latest"],
+                    "windows": {k: asdict(v) for k, v in s["stats"].items()},
+                }
+                for s in summaries(request)
+            ],
         }
 
     @app.get("/api/targets/{name}/checks")

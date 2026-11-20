@@ -1,0 +1,29 @@
+# Demo configuration used by compose.demo.yaml: monitors the local demo-sites
+# container, which simulates healthy, slow, flaky and broken endpoints.
+
+[monitor]
+interval_seconds = 10
+timeout_seconds = 3
+retention_days = 7
+database = "/data/uptime.db"
+
+[[targets]]
+name = "homepage"
+url = "http://demo-sites:9000/healthy"
+
+[[targets]]
+name = "api"
+url = "http://demo-sites:9000/slow"
+expected_status = 200
+
+[[targets]]
+name = "checkout"
+url = "http://demo-sites:9000/flaky"
+
+[[targets]]
+name = "search"
+url = "http://demo-sites:9000/hangs-sometimes"
+
+[[targets]]
+name = "legacy-admin"
+url = "http://demo-sites:9000/broken"
