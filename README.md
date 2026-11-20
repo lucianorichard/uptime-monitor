@@ -12,7 +12,14 @@ the current state and recent history on a local dashboard.
 It is deliberately simple: one process, no accounts, no external notifications, and no way
 for anyone using the dashboard to make it request an arbitrary URL.
 
-![Dashboard](docs/screenshots/dashboard.png)
+## Video Demonstration
+
+Watch the monitor track simulated HTTP services, display availability
+and latency, detect failures, recover, and expose its JSON API.
+
+[![Watch Uptime Monitor Demo](docs/screenshots/dashboard.png)](https://youtu.be/XNT0YLR93nY?si=EXNzaX35FHU7Mq89)
+
+*Demonstration uses simulated local services.*
 
 ## Features
 
