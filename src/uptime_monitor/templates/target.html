@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ item.target.name }} · Uptime Monitor{% endblock %}
+{% block content %}
+{% set t = item.target %}
+<header>
+  <h1><a href="/">Uptime Monitor</a> / {{ t.name }} <span class="badge {{ item.state }}">{{ item.state | replace("-", " ") | upper }}</span></h1>
+  <span class="url">{{ t.url }}</span>
+</header>
+
+<section class="card">
+  <div class="grid2">
+    {% for label, s in item.stats.items() %}
+    <div class="stat"><span class="muted small">Availability {{ label }}</span>
+      <b>{{ s.availability | pct }}</b>
+      <span class="small muted">{{ s.successful }}/{{ s.total }} checks · coverage {{ s.coverage | pct }}</span></div>
+    {% endfor %}
+    <div class="stat"><span class="muted small">Latency 24 h (p50 / p95)</span>
+      <b>{{ item.stats["24h"].p50_ms | ms }}</b>
+      <span class="small muted">p95 {{ item.stats["24h"].p95_ms | ms }}</span></div>
+    <div class="stat"><span class="muted small">Check rules</span>
+      <b class="small">expected {{ t.expected_label }}</b>
+      <span class="small muted">timeout {{ t.timeout_seconds | round(1) }}s · redirects {{ "followed" if t.follow_redirects else "not followed" }}</span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Response time, last {{ item.bars | length }} checks</h2>
+  {% set c = item.chart %}
+  <svg class="chart" viewBox="-40 -10 {{ c.width + 50 }} {{ c.height + 30 }}" role="img"
+       aria-label="Response time chart">
+    <line class="grid" x1="0" y1="0" x2="{{ c.width }}" y2="0"/>
+    <line class="grid" x1="0" y1="{{ c.height / 2 }}" x2="{{ c.width }}" y2="{{ c.height / 2 }}"/>
+    <line class="grid" x1="0" y1="{{ c.height }}" x2="{{ c.width }}" y2="{{ c.height }}"/>
+    <text x="-6" y="4" text-anchor="end">{{ c.max_ms }} ms</text>
+    <text x="-6" y="{{ c.height + 4 }}" text-anchor="end">0</text>
+    {% for x in c.failures %}<line class="fail" x1="{{ x }}" y1="{{ c.height }}" x2="{{ x }}" y2="{{ c.height - 14 }}"/>{% endfor %}
+    <polyline points="{{ c.points }}"/>
+    <text x="0" y="{{ c.height + 18 }}">older</text>
+    <text x="{{ c.width }}" y="{{ c.height + 18 }}" text-anchor="end">newest · red ticks = failed checks</text>
+  </svg>
+</section>
+
+<section class="card scroll">
+  <h2>Recent checks</h2>
+  <table>
+    <thead><tr><th>Time (UTC)</th><th>Result</th><th class="num">Code</th><th class="num">Latency</th><th>Error</th></tr></thead>
+    <tbody>
+    {% for c in checks %}
+      <tr>
+        <td class="small">{{ c.checked_at | when }}</td>
+        <td><span class="badge {{ 'up' if c.ok else 'down' }}">{{ "OK" if c.ok else "FAIL" }}</span></td>
+        <td class="num">{{ c.status_code or "-" }}</td>
+        <td class="num">{{ c.response_ms | ms }}</td>
+        <td class="small error">{{ c.error or "" }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">No checks yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

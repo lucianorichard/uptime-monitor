@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Small self-hosted uptime monitor for your own websites: FastAPI dashboard, SQLite history, explicit availability maths."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Richard Luciano Garcia" }]
 dependencies = [
     "fastapi>=0.110",

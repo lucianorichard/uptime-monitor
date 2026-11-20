@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1>Uptime Monitor</h1>
+  <span class="muted small">Last run: {{ last_run | when }}</span>
+</header>
+<div class="pills">
+  <span class="pill"><span class="badge up">UP</span> {{ counts["up"] }}</span>
+  <span class="pill"><span class="badge down">DOWN</span> {{ counts["down"] }}</span>
+  {% if counts["stale"] %}<span class="pill"><span class="badge stale">STALE</span> {{ counts["stale"] }}</span>{% endif %}
+  {% if counts["no-data"] %}<span class="pill"><span class="badge no-data">NO DATA</span> {{ counts["no-data"] }}</span>{% endif %}
+</div>
+
+<section class="card scroll">
+  <table>
+    <thead><tr>
+      <th>Status</th><th>Site</th><th>Last {{ items[0].bars | length if items else 0 }} checks</th>
+      <th class="num">Code</th><th class="num">Latency</th>
+      <th class="num">24 h</th><th class="num">7 d</th>
+    </tr></thead>
+    <tbody>
+    {% for i in items %}
+      <tr>
+        <td><span class="badge {{ i.state }}">{{ i.state | replace("-", " ") | upper }}</span></td>
+        <td><a href="/targets/{{ i.target.name }}"><b>{{ i.target.name }}</b></a>
+            <div class="url">{{ i.target.url }}</div>
+            {% if i.latest and i.latest.error %}<div class="small error">{{ i.latest.error }}</div>{% endif %}</td>
+        <td><div class="bars">{% for b in i.bars %}<span class="{{ 'ok' if b.ok else 'fail' }}"
+             title="{{ b.checked_at | when }} · {{ b.status_code or b.error }}"></span>{% endfor %}</div></td>
+        <td class="num">{{ i.latest.status_code if i.latest and i.latest.status_code else "-" }}</td>
+        <td class="num">{{ (i.latest.response_ms if i.latest else None) | ms }}</td>
+        <td class="num" title="{{ i.stats['24h'].successful }}/{{ i.stats['24h'].total }} checks">{{ i.stats["24h"].availability | pct }}</td>
+        <td class="num" title="{{ i.stats['7d'].successful }}/{{ i.stats['7d'].total }} checks">{{ i.stats["7d"].availability | pct }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<p class="small muted">Availability counts successful checks (response within the timeout and an
+expected status code) over all checks in the window. It is measured from this machine only.</p>
+{% endblock %}
