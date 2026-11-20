@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+# Local data and your own configuration (it lists your sites)
+*.db
+*.db-wal
+*.db-shm
+data/
+config.toml
