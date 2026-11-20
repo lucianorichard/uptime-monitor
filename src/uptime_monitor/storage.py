@@ -72,6 +72,15 @@ class Storage:
                 (target, _iso(since)),
             ).fetchall()
 
+    def first_check(self, target: str) -> datetime | None:
+        """Time of the oldest stored check: when monitoring of this target began
+        (within the retention period)."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT MIN(checked_at) FROM checks WHERE target = ?", (target,)
+            ).fetchone()
+        return datetime.fromisoformat(row[0]) if row and row[0] else None
+
     def prune(self, before: datetime) -> int:
         with self._lock, self._conn:
             return self._conn.execute(

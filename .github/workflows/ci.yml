@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install ".[dev]"
+      - run: ruff check . && ruff format --check .
+      - run: pytest -v
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the demo stack
+        run: docker compose -f compose.yaml -f compose.demo.yaml up -d --build --wait monitor
+      - name: The monitor checks the demo sites and serves the dashboard
+        run: |
+          sleep 15
+          curl -sf http://127.0.0.1:8000/healthz
+          curl -sf http://127.0.0.1:8000/ | grep -q "Uptime Monitor"
+          curl -sf http://127.0.0.1:8000/api/status | jq -e '[.targets[] | select(.latest != null)] | length == 5'
+          curl -sf http://127.0.0.1:8000/api/status | jq -e '.targets[] | select(.name == "legacy-admin") | .state == "down"'
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.demo.yaml logs

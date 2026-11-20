@@ -26,7 +26,7 @@
 <section class="card">
   <h2>Response time, last {{ item.bars | length }} checks</h2>
   {% set c = item.chart %}
-  <svg class="chart" viewBox="-40 -10 {{ c.width + 50 }} {{ c.height + 30 }}" role="img"
+  <svg class="chart" viewBox="-64 -10 {{ c.width + 74 }} {{ c.height + 30 }}" role="img"
        aria-label="Response time chart">
     <line class="grid" x1="0" y1="0" x2="{{ c.width }}" y2="0"/>
     <line class="grid" x1="0" y1="{{ c.height / 2 }}" x2="{{ c.width }}" y2="{{ c.height / 2 }}"/>

@@ -16,6 +16,10 @@ go unnoticed, and periods when the monitor itself was not running are simply
 missing. *Coverage* makes those gaps visible:
 
     coverage(window) = checks performed / checks expected (window / interval) x 100
+
+The window used for coverage starts at the first stored check of the target
+when that is more recent, so a newly added target is not reported as poorly
+covered; gaps after monitoring began still lower it.
 """
 
 from __future__ import annotations

@@ -113,3 +113,37 @@ def test_security_headers(setup):
 def test_healthz(setup):
     client, _, _ = setup
     assert client.get("/healthz").json()["status"] == "ok"
+
+
+def test_coverage_counts_from_when_monitoring_began(storage):
+    settings = make_settings(interval=30)
+    now = datetime.now(UTC)
+    # Monitoring started 5 minutes ago: 10 checks, one per interval, no gaps.
+    storage.add(
+        [
+            CheckResult("site", now - timedelta(seconds=30 * i), True, 200, 10.0, None)
+            for i in range(10)
+        ]
+    )
+    app = create_app(settings, storage, run_monitor=False)
+    with TestClient(app) as client:
+        window = client.get("/api/status").json()["targets"][0]["windows"]["24h"]
+    assert window["total"] == 10
+    assert window["coverage"] >= 99  # not 10 / 2880 checks of a full day
+
+
+def test_coverage_drops_when_the_monitor_had_a_gap(storage):
+    settings = make_settings(interval=30)
+    now = datetime.now(UTC)
+    # First check 10 minutes ago, then nothing until the last 5 minutes.
+    storage.add([CheckResult("site", now - timedelta(minutes=10), True, 200, 10.0, None)])
+    storage.add(
+        [
+            CheckResult("site", now - timedelta(seconds=30 * i), True, 200, 10.0, None)
+            for i in range(10)
+        ]
+    )
+    app = create_app(settings, storage, run_monitor=False)
+    with TestClient(app) as client:
+        window = client.get("/api/status").json()["targets"][0]["windows"]["24h"]
+    assert 50 <= window["coverage"] <= 60

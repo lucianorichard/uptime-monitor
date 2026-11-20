@@ -71,13 +71,17 @@ def _chart(rows) -> dict:
 def summarize(settings: Settings, storage: Storage, target: Target, now: datetime) -> dict:
     recent = storage.recent(target.name, BAR_CHECKS)
     latest = recent[0] if recent else None
+    first = storage.first_check(target.name)
     stats = {}
     for label, delta in WINDOWS.items():
         rows = storage.since(target.name, now - delta)
+        # Coverage counts expected checks only since monitoring of this target
+        # began, so a monitor started an hour ago is not "4% covered" for 24 h.
+        observed = delta if first is None else min(delta, now - first)
         stats[label] = window_stats(
             [bool(r["ok"]) for r in rows],
             [r["response_ms"] for r in rows if r["response_ms"] is not None],
-            delta.total_seconds(),
+            max(observed.total_seconds(), settings.interval_seconds),
             settings.interval_seconds,
         )
     return {
